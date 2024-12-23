@@ -1,27 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:isa_task_app/splash_screen.dart';
 
-void main() {
-  runApp(MaterialApp(
-    home: Home(),
-  ));
-}
+void main() => runApp(MyApp());
 
-class Home extends StatelessWidget {
-  const Home({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'ISA TASK APP',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: const Color.fromARGB(255, 135, 12, 243),
-        foregroundColor: Colors.white,
-        centerTitle: true,
-      ),
-      body: Center(child: Text('Home Page')),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: SplashScreen(),
     );
   }
 }
