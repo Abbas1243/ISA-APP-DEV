@@ -14,11 +14,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  void signIn() async {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+  void _signIn() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all fields'),
@@ -30,8 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await supabase.auth.signInWithPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
 
       if (response.user != null) {
