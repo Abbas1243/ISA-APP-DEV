@@ -42,7 +42,10 @@ packages:
     source: hosted
     version: "1.18.0"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
   crypto:
     dependency: transitive
     description:
@@ -175,7 +178,10 @@ packages:
     source: hosted
     version: "5.0.0"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
   logging:
     dependency: transitive
     description:
@@ -239,7 +245,10 @@ packages:
     source: hosted
     version: "1.11.1"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
   storage_client:
     dependency: transitive
     description:
@@ -266,7 +275,10 @@ packages:
     source: hosted
     version: "1.2.0"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
   supabase:
     dependency: transitive
     description:
@@ -301,7 +313,10 @@ packages:
     source: hosted
     version: "0.7.2"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
   typed_data:
     dependency: transitive
     description:
@@ -392,10 +407,13 @@ packages:
     source: hosted
     version: "14.2.5"
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 sdks:
   dart: ">=3.5.1 <4.0.0"
   flutter: ">=3.18.0-18.0.pre.54"
 =======
+=======
+>>>>>>> Stashed changes
   web:
     dependency: transitive
     description:
