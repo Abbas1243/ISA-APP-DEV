@@ -1,6 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:isa_task_app/home_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LoginScreen extends StatelessWidget {
+final supabase = Supabase.instance.client;
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  void _signIn() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final response = await supabase.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (response.user != null) {
+        if (mounted) {
+          // Navigate to home screen on successful login
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ),
+          );
+        }
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to sign in'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,6 +91,7 @@ class LoginScreen extends StatelessWidget {
               SizedBox(height: 30.0),
               // Email TextField
               TextField(
+                controller: _emailController,
                 decoration: InputDecoration(
                   prefixIcon: Icon(Icons.mail, color: Colors.blue),
                   labelText: "Email",
@@ -51,6 +114,7 @@ class LoginScreen extends StatelessWidget {
               SizedBox(height: 20.0),
               // Password TextField
               TextField(
+                controller: _passwordController,
                 style: TextStyle(color: Colors.white),
                 obscureText: true,
                 decoration: InputDecoration(
@@ -71,6 +135,7 @@ class LoginScreen extends StatelessWidget {
               // Login Button
               ElevatedButton(
                 onPressed: () {
+                  _signIn();
                   // Add your login logic here
                   print("Login button pressed");
                 },
@@ -91,5 +156,12 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }
