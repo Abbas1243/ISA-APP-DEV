@@ -1,0 +1,1 @@
+ C:\\Users\\prati\\OneDrive\\Documents\\GitHub\\ISA-APP-DEV\\week4\\isa_task_app\\.dart_tool\\flutter_build\\02a239e5fe9d6950b81f81ec759edee4\\native_assets.yaml: 

@@ -1,0 +1,13 @@
+#Tue Dec 24 10:35:22 IST 2024
+base.0=C\:\\Users\\prati\\OneDrive\\Documents\\GitHub\\ISA-APP-DEV\\week4\\isa_task_app\\build\\app\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
+base.1=C\:\\Users\\prati\\OneDrive\\Documents\\GitHub\\ISA-APP-DEV\\week4\\isa_task_app\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+base.2=C\:\\Users\\prati\\OneDrive\\Documents\\GitHub\\ISA-APP-DEV\\week4\\isa_task_app\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\1\\classes.dex
+base.3=C\:\\Users\\prati\\OneDrive\\Documents\\GitHub\\ISA-APP-DEV\\week4\\isa_task_app\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\9\\classes.dex
+path.0=classes.dex
+path.1=0/classes.dex
+path.2=1/classes.dex
+path.3=9/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex
+renamed.2=classes3.dex
+renamed.3=classes4.dex
