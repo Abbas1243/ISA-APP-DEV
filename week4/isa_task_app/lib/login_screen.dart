@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:isa_task_app/home_screen.dart';
+import 'package:isa_task_app/yours_task.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Navigate to home screen on successful login
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
+              builder: (context) => YourTasksScreen(),
             ),
           );
         }
