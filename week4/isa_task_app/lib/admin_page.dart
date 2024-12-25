@@ -24,10 +24,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _loadTasks() async {
     try {
+      final userId = supabase.auth.currentUser?.id;
+
+      if (userId == null) {
+        // Handle the case where the user is not authenticated
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('User is not authenticated. Please log in.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final response = await supabase
           .from('tasks')
           .select()
+          .eq('created_by', userId) // Safe access to user.id
           .order('due_date', ascending: true);
+
 
       setState(() {
         _tasks = (response as List).map((task) => Task.fromMap(task)).toList();
