@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isa_task_app/profile_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
@@ -97,9 +98,10 @@ class _YourTasksScreenState extends State<YourTasksScreen>
     return Scaffold(
       backgroundColor: const Color(0xFF161616),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFF3F51B5),
         title: const Text('Your Tasks',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -132,10 +134,74 @@ class _YourTasksScreenState extends State<YourTasksScreen>
             ),
           );
         },
-        backgroundColor: const Color(0xFF3F51B5),
+        backgroundColor: Colors.blueAccent,
         child: const Icon(
           Icons.refresh,
           color: Colors.white,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF161616),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 6,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: const Color(0xFF161616),
+          selectedItemColor: Colors.blueAccent,
+          unselectedItemColor: Colors.white70,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined, size: 28),
+              activeIcon: Icon(Icons.home, size: 28, color: Colors.blueAccent),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.notifications_none, size: 28),
+              activeIcon:
+                  Icon(Icons.notifications, size: 28, color: Colors.blueAccent),
+              label: 'Notifications',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline, size: 28),
+              activeIcon:
+                  Icon(Icons.person, size: 28, color: Colors.blueAccent),
+              label: 'Profile',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.folder_open_outlined, size: 28),
+              activeIcon:
+                  Icon(Icons.folder, size: 28, color: Colors.blueAccent),
+              label: 'Resources',
+            ),
+          ],
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                Navigator.pushNamed(context, '/home');
+                break;
+              case 1:
+                Navigator.pushNamed(context, '/notifications');
+                break;
+              case 2:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+                break;
+              case 3:
+                Navigator.pushNamed(context, '/resources');
+                break;
+            }
+          },
         ),
       ),
     );
@@ -180,7 +246,7 @@ class _YourTasksScreenState extends State<YourTasksScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Slightly lighter for better contrast
+        color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
