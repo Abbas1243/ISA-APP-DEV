@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isa_task_app/admin_page.dart';
 import 'package:isa_task_app/yours_task.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,26 +16,40 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _signIn() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+void _signIn() async {
+  if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please fill in all fields'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
 
-    try {
-      final response = await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+  try {
+    final response = await supabase.auth.signInWithPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
 
-      if (response.user != null) {
-        if (mounted) {
-          // Navigate to home screen on successful login
+    if (response.user != null) {
+      // Get user role from the users table
+      final userData = await supabase
+          .from('users')
+          .select('role')
+          .eq('email', _emailController.text.trim())
+          .single();
+
+      if (mounted) {
+        // Navigate based on user role
+        if (userData['role'] == 'admin') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => AdminDashboard(),
+            ),
+          );
+        } else {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => YourTasksScreen(),
@@ -42,26 +57,27 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       }
-    } on AuthException catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.message),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to sign in'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {}
+    }
+  } on AuthException catch (error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to sign in'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:isa_task_app/admin_page.dart';
 import 'package:isa_task_app/notification_screen.dart';
-import 'package:isa_task_app/yours_task.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:isa_task_app/resources_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:isa_task_app/yours_task.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -15,6 +16,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? userName;
   String? userEmail;
   String? userRole;
+  int selectedIndex = 2; // Set to Profile tab index
 
   @override
   void initState() {
@@ -43,21 +45,90 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  void onTabTapped(int index) async { // Mark the function as async
+  setState(() {
+    selectedIndex = index; // Update the selected index
+  });
+
+  switch (index) {
+    case 0:
+      {
+        if (userName != null && userEmail != null) {
+          try {
+            // Get user role from the users table
+            final userData = await supabase
+                .from('users')
+                .select('role')
+                .eq('email', userEmail!.trim())
+                .single();
+
+            if (mounted) {
+              // Navigate based on user role
+              if (userData != null && userData['role'] == 'admin') {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => AdminDashboard(),
+                  ),
+                );
+              } else {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => YourTasksScreen(),
+                  ),
+                );
+              }
+            }
+          } catch (e) {
+            // Handle errors (e.g., network issues, query failures)
+            print('Error fetching user role: $e');
+          }
+        }
+      }
+      break;
+
+    case 1:
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => NotificationScreen()),
+      );
+      break;
+
+    case 2:
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()),
+      );
+      break;
+
+    case 3:
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ResourcesPage()),
+      );
+      break;
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF181818), // Dark background color
+      backgroundColor: const Color(0xFF161616),
       appBar: AppBar(
-        title: Text("Your Profile"),
-        backgroundColor: Color(0xFF6A5ACD), // Nav bar color (periwinkle)
+        title: const Text(
+          "Your Profile",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF3F51B5),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedIndex, // Use the selectedIndex here
         backgroundColor: const Color(0xFF161616),
         selectedItemColor: Colors.blueAccent,
         unselectedItemColor: Colors.white70,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined, size: 28),
             activeIcon: Icon(Icons.home, size: 28, color: Colors.blueAccent),
@@ -80,98 +151,89 @@ class _ProfilePageState extends State<ProfilePage> {
             label: 'Resources',
           ),
         ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => YourTasksScreen()));
-              break;
-            case 1:
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => NotificationScreen()));
-              break;
-            case 2:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
-              );
-              break;
-            case 3:
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => ResourcesPage()));
-              break;
-          }
-        },
+        onTap: onTabTapped,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(height: 20),
-            CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.grey[300],
-              child: Icon(Icons.person, size: 50, color: Colors.grey[700]),
-            ),
-            SizedBox(height: 10),
-            Text(
-              userName ?? 'USER ABC',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-            SizedBox(height: 20),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Color(0xFF2E2E2E), // Box color
-                borderRadius: BorderRadius.circular(8),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.grey[800],
+                child: const Icon(Icons.person, size: 50, color: Colors.white),
               ),
-              child: Row(
-                children: [
-                  Text(
-                    'Mail: ',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                  Text(
-                    userEmail ?? 'abcxyz@example.com',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
+              const SizedBox(height: 20),
+              Text(
+                userName ?? 'USER ABC',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Color(0xFF2E2E2E), // Box color
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    'Role: ',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+              const SizedBox(height: 20),
+              _buildInfoCard('Mail', userEmail ?? 'abcxyz@example.com'),
+              const SizedBox(height: 10),
+              _buildInfoCard('Role', userRole ?? 'Logistics Coordinator'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  // Handle edit profile
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  Text(
-                    userRole ?? 'Logistics Coordinator',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
+                ),
+                child: const Text(
+                  'Edit Profile',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-            ),
-            Spacer(),
-            FloatingActionButton(
-              onPressed: () {
-                // Handle edit profile
-              },
-              backgroundColor: Color(0xFF6A5ACD),
-              child: Icon(Icons.edit, color: Colors.white),
-            ),
-            SizedBox(height: 20),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(String label, String value) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blueAccent, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: const TextStyle(color: Colors.grey, fontSize: 16),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
