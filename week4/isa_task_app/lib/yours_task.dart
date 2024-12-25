@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isa_task_app/profile_page.dart';
+import 'package:isa_task_app/resources_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
@@ -198,7 +199,10 @@ class _YourTasksScreenState extends State<YourTasksScreen>
                 );
                 break;
               case 3:
-                Navigator.pushNamed(context, '/resources');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ResourcesPage()),
+                );
                 break;
             }
           },
