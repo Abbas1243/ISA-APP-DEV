@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isa_task_app/admin_page.dart';
-import 'package:isa_task_app/notification_screen.dart';
+import 'package:isa_task_app/notif_app.dart';
 import 'package:isa_task_app/resources_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:isa_task_app/yours_task.dart';
@@ -45,70 +45,70 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void onTabTapped(int index) async { // Mark the function as async
-  setState(() {
-    selectedIndex = index; // Update the selected index
-  });
+  void onTabTapped(int index) async {
+    // Mark the function as async
+    setState(() {
+      selectedIndex = index; // Update the selected index
+    });
 
-  switch (index) {
-    case 0:
-      {
-        if (userName != null && userEmail != null) {
-          try {
-            // Get user role from the users table
-            final userData = await supabase
-                .from('users')
-                .select('role')
-                .eq('email', userEmail!.trim())
-                .single();
+    switch (index) {
+      case 0:
+        {
+          if (userName != null && userEmail != null) {
+            try {
+              // Get user role from the users table
+              final userData = await supabase
+                  .from('users')
+                  .select('role')
+                  .eq('email', userEmail!.trim())
+                  .single();
 
-            if (mounted) {
-              // Navigate based on user role
-              if (userData != null && userData['role'] == 'admin') {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) => AdminDashboard(),
-                  ),
-                );
-              } else {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) => YourTasksScreen(),
-                  ),
-                );
+              if (mounted) {
+                // Navigate based on user role
+                if (userData != null && userData['role'] == 'admin') {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => AdminDashboard(),
+                    ),
+                  );
+                } else {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => YourTasksScreen(),
+                    ),
+                  );
+                }
               }
+            } catch (e) {
+              // Handle errors (e.g., network issues, query failures)
+              print('Error fetching user role: $e');
             }
-          } catch (e) {
-            // Handle errors (e.g., network issues, query failures)
-            print('Error fetching user role: $e');
           }
         }
-      }
-      break;
+        break;
 
-    case 1:
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => NotificationScreen()),
-      );
-      break;
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => NotificationScreen()),
+        );
+        break;
 
-    case 2:
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ProfilePage()),
-      );
-      break;
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfilePage()),
+        );
+        break;
 
-    case 3:
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ResourcesPage()),
-      );
-      break;
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ResourcesPage()),
+        );
+        break;
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {

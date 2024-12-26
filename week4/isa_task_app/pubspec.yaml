@@ -27,16 +27,15 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
 dependencies:
   flutter:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-  supabase_flutter: ^2.8.2
-  intl: ^0.20.1
-  flutter_local_notifications: ^12.0.3
+  url_launcher: ^6.1.5 # For opening URLs in the browser or apps
+  supabase_flutter: ^2.8.2 # To interact with Supabase (auth, storage, etc.)
+  intl: ^0.20.1 # For date formatting or internationalization
+  flutter_local_notifications: ^12.0.3 # For local notifications
+  cupertino_icons: ^1.0.8 # For iOS-styled icons
 
 dev_dependencies:
   flutter_test:

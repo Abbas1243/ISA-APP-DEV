@@ -15,34 +15,273 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   bool _isLoading = true;
   List<Task> _tasks = [];
+  final TextEditingController _taskNameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _priorityController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
+  String? _selectedUserId;
+  List<Map<String, dynamic>> _users = [];
 
   @override
   void initState() {
     super.initState();
+    _loadUsers();
     _loadTasks();
+  }
+
+  @override
+  void dispose() {
+    _taskNameController.dispose();
+    _descriptionController.dispose();
+    _priorityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUsers() async {
+    try {
+      final response = await supabase
+          .from('users')
+          .select('user_id, name')
+          .order('name', ascending: true);
+
+      setState(() {
+        _users = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading users: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _createTask() async {
+    try {
+      if (_selectedUserId == null) {
+        throw Exception('Please select a user to assign the task');
+      }
+
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) throw Exception('User not authenticated');
+
+      await supabase.from('tasks').insert({
+        'task_name': _taskNameController.text,
+        'description': _descriptionController.text,
+        'status': 'pending',
+        'due_date': _selectedDate.toIso8601String().split('T')[0],
+        'priority': int.parse(_priorityController.text),
+        'assigned_to': _selectedUserId,
+        'created_by': userId,
+      });
+
+      if (mounted) {
+        Navigator.of(context).pop(); // Close the dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Task created successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadTasks(); // Refresh the task list
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating task: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showCreateTaskDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Create New Task',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _taskNameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Task Name',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.white24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _descriptionController,
+                  style: const TextStyle(color: Colors.white),
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.white24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _priorityController,
+                  style: const TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Priority (1-5)',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.white24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  title: const Text(
+                    'Due Date',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  subtitle: Text(
+                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.calendar_today, color: Colors.white),
+                    onPressed: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: const ColorScheme.dark(
+                                primary: Colors.blueAccent,
+                                surface: Color(0xFF1E1E1E),
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (picked != null) {
+                        setState(() => _selectedDate = picked);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedUserId,
+                  items: _users.map((user) {
+                    return DropdownMenuItem<String>(
+                      value: user['user_id']
+                          .toString(), // Explicitly convert to String
+                      child: Text(
+                        user['name'] ?? '',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedUserId = value);
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Assign To',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.white24),
+                    ),
+                  ),
+                  dropdownColor: const Color(0xFF1E1E1E),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: _createTask,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueAccent,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: const Text('Create Task'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _loadTasks() async {
     try {
-      final userId = supabase.auth.currentUser?.id;
+      setState(() => _isLoading = true);
 
+      final userId = supabase.auth.currentUser?.id;
       if (userId == null) {
-        // Handle the case where the user is not authenticated
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('User is not authenticated. Please log in.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
+        throw Exception('User not authenticated');
       }
 
-      final response = await supabase
-          .from('tasks')
-          .select()
-          .eq('created_by', userId) // Safe access to user.id
-          .order('due_date', ascending: true);
-
+      final response = await supabase.from('tasks').select('''
+          *,
+          assigned_user:users!fk_assigned_to(
+            name,
+            user_id
+          )
+        ''').eq('created_by', userId).order('due_date', ascending: true);
 
       setState(() {
         _tasks = (response as List).map((task) => Task.fromMap(task)).toList();
@@ -50,12 +289,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading tasks: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e is PostgrestException
+                ? 'Database error: ${e.message}'
+                : 'Error loading tasks: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -84,6 +327,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showCreateTaskDialog,
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       backgroundColor: const Color(0xFF161616),
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -99,24 +347,45 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 return _buildTaskCard(_tasks[index]);
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          setState(() => _isLoading = true);
-          await _loadTasks();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Tasks refreshed successfully'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 1),
-            ),
-          );
-        },
-        backgroundColor: Colors.blueAccent,
-        child: const Icon(
-          Icons.refresh,
-          color: Colors.white,
-        ),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     showModalBottomSheet(
+      //       context: context,
+      //       builder: (BuildContext context) {
+      //         return Column(
+      //           mainAxisSize: MainAxisSize.min,
+      //           children: <Widget>[
+      //             ListTile(
+      //               leading: const Icon(Icons.add),
+      //               title: const Text('Create Task'),
+      //               onTap: () {
+      //                 Navigator.pop(context);
+      //                 _showCreateTaskDialog();
+      //               },
+      //             ),
+      //             ListTile(
+      //               leading: const Icon(Icons.refresh),
+      //               title: const Text('Refresh Tasks'),
+      //               onTap: () async {
+      //                 Navigator.pop(context);
+      //                 setState(() => _isLoading = true);
+      //                 await _loadTasks();
+      //                 ScaffoldMessenger.of(context).showSnackBar(
+      //                   const SnackBar(
+      //                     content: Text('Tasks refreshed successfully'),
+      //                     backgroundColor: Colors.green,
+      //                   ),
+      //                 );
+      //               },
+      //             ),
+      //           ],
+      //         );
+      //       },
+      //     );
+      //   },
+      //   backgroundColor: Colors.blueAccent,
+      //   child: const Icon(Icons.menu, color: Colors.white),
+      // ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF161616),
@@ -139,12 +408,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
               icon: Icon(Icons.home_outlined, size: 28),
               activeIcon: Icon(Icons.home, size: 28, color: Colors.blueAccent),
               label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notifications_none, size: 28),
-              activeIcon:
-                  Icon(Icons.notifications, size: 28, color: Colors.blueAccent),
-              label: 'Notifications',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline, size: 28),
@@ -232,6 +495,25 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          // Added creator info
+          Row(
+            children: [
+              const Icon(
+                Icons.person,
+                color: Colors.white70,
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Assigned to: ${task.assignedToName}',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           Text(
             task.description,
@@ -264,6 +546,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 onPressed: () => _showStatusUpdateModal(task),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
