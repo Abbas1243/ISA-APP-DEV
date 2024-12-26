@@ -13,8 +13,8 @@ class Task {
   final DateTime dueDate;
   final int priority;
   final String assignedTo;
+  final String assignedToName;
   final String createdBy;
-  final DateTime createdAt;
 
   Task({
     required this.taskId,
@@ -24,23 +24,28 @@ class Task {
     required this.dueDate,
     required this.priority,
     required this.assignedTo,
+    required this.assignedToName,
     required this.createdBy,
-    required this.createdAt,
   });
 
   factory Task.fromMap(Map<String, dynamic> map) {
+    String assignedToName = 'Unknown';
+    if (map['assigned_user'] != null) {
+      assignedToName = map['assigned_user']['name'] ?? 'Unknown';
+    }
+
     return Task(
-      taskId: map['task_id'].toString(),
+      taskId: map['task_id'] ?? '',
       taskName: map['task_name'] ?? '',
       description: map['description'] ?? '',
       status: map['status'] ?? '',
-      dueDate:
-          DateTime.parse(map['due_date'] ?? DateTime.now().toIso8601String()),
-      priority: map['priority'] ?? 1,
+      dueDate: map['due_date'] != null
+          ? DateTime.parse(map['due_date'])
+          : DateTime.now(),
+      priority: map['priority']?.toInt() ?? 0,
       assignedTo: map['assigned_to'] ?? '',
+      assignedToName: assignedToName,
       createdBy: map['created_by'] ?? '',
-      createdAt:
-          DateTime.parse(map['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 }
