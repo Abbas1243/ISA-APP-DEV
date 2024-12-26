@@ -42,12 +42,18 @@ class _SplashScreenState extends State<SplashScreen> {
                       'assets/images/splash_2.png', // Replace with your second illustration
                   text: "Track your progress seamlessly",
                 ),
+                _buildPage(
+                  image:
+                      'assets/images/splash_3.png', // Replace with your third illustration
+                  text: "Get notified about important updates",
+                ),
               ],
             ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(2, (index) {
+            children: List.generate(3, (index) {
+              // Updated to 3 pages
               return Container(
                 margin: EdgeInsets.symmetric(horizontal: 5.0),
                 width: _currentPage == index ? 12.0 : 8.0,

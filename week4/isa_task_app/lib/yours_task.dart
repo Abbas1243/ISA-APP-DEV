@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:isa_task_app/notification_screen.dart';
+import 'package:isa_task_app/notif_app.dart';
+import 'package:isa_task_app/notif_app.dart';
 import 'package:isa_task_app/profile_page.dart';
 import 'package:isa_task_app/resources_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -195,6 +196,10 @@ class _YourTasksScreenState extends State<YourTasksScreen>
                   context,
                   MaterialPageRoute(builder: (context) => NotificationScreen()),
                 );
+
+                context;
+                MaterialPageRoute(builder: (context) => NotificationScreen());
+
                 break;
               case 2:
                 Navigator.push(

@@ -1,5 +1,5 @@
 // ignore_for_file: unused_import
-import 'package:isa_task_app/notification_screen.dart';
+import 'package:isa_task_app/notif_app.dart';
 import 'package:isa_task_app/yours_task.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
