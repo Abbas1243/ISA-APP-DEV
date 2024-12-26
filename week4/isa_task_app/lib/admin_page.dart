@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:isa_task_app/notif_app.dart';
 import 'package:isa_task_app/profile_page.dart';
+import 'package:isa_task_app/resources_page.dart';
 import 'package:isa_task_app/yours_task.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -327,11 +329,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateTaskDialog,
-        backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _showCreateTaskDialog,
+      //   backgroundColor: Colors.blueAccent,
+      //   child: const Icon(Icons.add, color: Colors.white),
+      // ),
       backgroundColor: const Color(0xFF161616),
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -347,45 +349,45 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 return _buildTaskCard(_tasks[index]);
               },
             ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     showModalBottomSheet(
-      //       context: context,
-      //       builder: (BuildContext context) {
-      //         return Column(
-      //           mainAxisSize: MainAxisSize.min,
-      //           children: <Widget>[
-      //             ListTile(
-      //               leading: const Icon(Icons.add),
-      //               title: const Text('Create Task'),
-      //               onTap: () {
-      //                 Navigator.pop(context);
-      //                 _showCreateTaskDialog();
-      //               },
-      //             ),
-      //             ListTile(
-      //               leading: const Icon(Icons.refresh),
-      //               title: const Text('Refresh Tasks'),
-      //               onTap: () async {
-      //                 Navigator.pop(context);
-      //                 setState(() => _isLoading = true);
-      //                 await _loadTasks();
-      //                 ScaffoldMessenger.of(context).showSnackBar(
-      //                   const SnackBar(
-      //                     content: Text('Tasks refreshed successfully'),
-      //                     backgroundColor: Colors.green,
-      //                   ),
-      //                 );
-      //               },
-      //             ),
-      //           ],
-      //         );
-      //       },
-      //     );
-      //   },
-      //   backgroundColor: Colors.blueAccent,
-      //   child: const Icon(Icons.menu, color: Colors.white),
-      // ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text('Create Task'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showCreateTaskDialog();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.refresh),
+                    title: const Text('Refresh Tasks'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      setState(() => _isLoading = true);
+                      await _loadTasks();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Tasks refreshed successfully'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.menu, color: Colors.white),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF161616),
@@ -410,6 +412,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.notifications_none, size: 28),
+              activeIcon:
+                  Icon(Icons.notifications, size: 28, color: Colors.blueAccent),
+              label: 'Notifications',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.person_outline, size: 28),
               activeIcon:
                   Icon(Icons.person, size: 28, color: Colors.blueAccent),
@@ -431,7 +439,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 );
                 break;
               case 1:
-                Navigator.pushNamed(context, '/notifications');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => NotificationScreen()),
+                );
                 break;
               case 2:
                 Navigator.push(
@@ -440,8 +451,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 );
                 break;
               case 3:
-                Navigator.pushNamed(context, '/resources');
-                break;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ResourcesPage()),
+                );
             }
           },
         ),
