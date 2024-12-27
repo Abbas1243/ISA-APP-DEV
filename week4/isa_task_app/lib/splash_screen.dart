@@ -59,7 +59,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: _currentPage == index ? 12.0 : 8.0,
                 height: 8.0,
                 decoration: BoxDecoration(
-                  color: _currentPage == index ? Colors.purple : Colors.grey,
+                  color: _currentPage == index
+                      ? const Color.fromRGBO(156, 39, 176, 1)
+                      : Colors.grey,
                   borderRadius: BorderRadius.circular(4.0),
                 ),
               );
