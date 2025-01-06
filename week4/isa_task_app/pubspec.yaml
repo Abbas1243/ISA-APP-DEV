@@ -38,6 +38,7 @@ dependencies:
   intl: ^0.20.1
   url_launcher: ^6.0.12
   image_picker: ^0.8.5+3
+  flutter_local_notifications: ^18.0.1
 
 
 dev_dependencies:
