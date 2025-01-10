@@ -18,6 +18,119 @@ class _ProfilePageState extends State<ProfilePage> {
   String? userRole;
   int selectedIndex = 2; // Set to Profile tab index
 
+  void _showModalBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            // Initialize with the current role, or set a default value
+            String? newRole = userRole;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16,
+                right: 16,
+                top: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Edit Council Role",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: newRole != null &&
+                            [
+                              "Technical Coordinator",
+                              "PR Coordinator",
+                              "Graphics Coordinator",
+                            ].contains(newRole)
+                        ? newRole
+                        : "Logistics Coordinator", // Set the current role as the initial value
+                    items: const [
+                      DropdownMenuItem(
+                        value: "Technical Coordinator",
+                        child: Text("Technical Coordinator"),
+                      ),
+                      DropdownMenuItem(
+                        value: "PR Coordinator",
+                        child: Text("PR Coordinator"),
+                      ),
+                      DropdownMenuItem(
+                        value: "Graphics Coordinator",
+                        child: Text("Graphics Coordinator"),
+                      ),
+                      DropdownMenuItem(
+                        value: "Logistics Coordinator",
+                        child: Text("Logistics Coordinator"),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setModalState(() {
+                        newRole =
+                            value; // Update the new role within the modal state
+                        print("Drop down newRole updated to: $newRole");
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Council Role',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a role';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      //debugging: log current and new roles
+                      print(
+                          "Current Role: $userRole, New Role: $newRole (when save is clicked)");
+                      // Ensure there's a change before proceeding
+                      if (newRole != null && newRole != userRole) {
+                        print("Proceeding to update role in the database....");
+                        // Call the method to update the role in the database
+                        await _updateCouncilRole(newRole!);
+
+                        // Close the bottom sheet after the update is successful
+                        Navigator.pop(context);
+
+                        // Update the role on the profile page by calling setState
+                        setState(() {
+                          userRole = newRole;
+                        });
+                      } else {
+                        print("No changes detected or newRole is null");
+                        // If no change, show a snackbar
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('No changes made.')),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                    child: const Text('Save Changes'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +147,8 @@ class _ProfilePageState extends State<ProfilePage> {
           .select('name, email, council_role')
           .eq('user_id', userId)
           .single();
+      //Debugging: log fetched data
+      print("Fetched user data: $response");
 
       setState(() {
         userName = response['name'];
@@ -42,6 +157,45 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     } catch (e) {
       print('Error fetching user data: $e');
+    }
+  }
+
+  Future<void> _updateCouncilRole(String newRole) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+
+      if (userId == null) {
+        print("User ID is null. Ensure the user is authenticated.");
+        return;
+      }
+
+      // Debugging: Log the userId and newRole
+      print("Updating council role for user ID: $userId to $newRole");
+
+      // Update the `council_role` in the Supabase database
+      final response = await supabase
+          .from('users')
+          .update({'council_role': newRole}).eq('user_id', userId);
+
+      if (response.error == null) {
+        // Successfully updated the role
+        print("Council role updated successfully in the database.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Role Updated Successfully')),
+        );
+      } else {
+        // Log and show the error
+        print("Error updating council role: ${response.error?.message}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.error?.message}')),
+        );
+      }
+    } catch (e) {
+      // Catch and log any errors
+      print('Exception occurred while updating council role: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
@@ -179,9 +333,7 @@ class _ProfilePageState extends State<ProfilePage> {
               _buildInfoCard('Role', userRole ?? 'Logistics Coordinator'),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  // Handle edit profile
-                },
+                onPressed: _showModalBottomSheet,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
                   shape: RoundedRectangleBorder(

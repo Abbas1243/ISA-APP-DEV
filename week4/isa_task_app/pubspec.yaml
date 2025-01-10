@@ -37,6 +37,8 @@ dependencies:
   flutter_local_notifications: ^12.0.3 # For local notifications
   cupertino_icons: ^1.0.8 # For iOS-styled icons
   flutter_pdfview: ^1.3.4
+  file_picker: ^5.2.2
+  path_provider: ^2.0.11
 
 dev_dependencies:
   flutter_test:

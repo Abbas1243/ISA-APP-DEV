@@ -1,76 +1,159 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:typed_data';
 
 final supabase = Supabase.instance.client;
-
-class Resource {
-  final String id;
-  final String name;
-  final String url;
-  final String type;
-  final String userId;
-
-  Resource({
-    required this.id,
-    required this.name,
-    required this.url,
-    required this.type,
-    required this.userId,
-  });
-
-  factory Resource.fromMap(Map<String, dynamic> map) {
-    return Resource(
-      id: map['id'] ?? '',
-      name: map['name'] ?? 'Unknown Resource',
-      url: map['url'] ?? '',
-      type: map['type'] ?? 'link',
-      userId: map['users_id'] ?? '',
-    );
-  }
-}
 
 class ResourcesPage extends StatefulWidget {
   const ResourcesPage({Key? key}) : super(key: key);
 
   @override
-  _ResourcesPageState createState() => _ResourcesPageState();
+  State<ResourcesPage> createState() => _ResourcesPageState();
 }
 
 class _ResourcesPageState extends State<ResourcesPage> {
+  List<Map<String, dynamic>> _resources = [];
   bool _isLoading = true;
-  List<Resource> _resources = [];
 
   @override
   void initState() {
     super.initState();
-    _loadResources();
+    _fetchResources();
   }
 
-  Future<void> _loadResources() async {
+  Future<void> _fetchResources() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        setState(() => _isLoading = false);
+      final files = await supabase.storage.from('resources').list();
+
+      if (files.isEmpty) {
+        setState(() {
+          _resources = [];
+        });
+      } else {
+        final fetchedResources = files.map((file) {
+          return {
+            'name': file.name,
+            'url': supabase.storage.from('resources').getPublicUrl(file.name),
+          };
+        }).toList();
+
+        setState(() {
+          _resources = fetchedResources;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load resources: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _selectFile() async {
+    try {
+      // Open file picker
+      final result = await FilePicker.platform.pickFiles(
+        withData: true, // Ensures the file's bytes are included
+      );
+
+      if (result == null) {
+        // User canceled the file picker
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("File selection canceled")),
+        );
         return;
       }
 
-      final response = await supabase
-          .from('storageresources')
-          .select()
-          .eq('users_id', user.id)
-          .order('name', ascending: true);
+      // Get the file's bytes and name
+      final fileBytes = result.files.single.bytes;
+      final fileName = result.files.single.name;
 
-      setState(() {
-        _resources =
-            (response as List).map((res) => Resource.fromMap(res)).toList();
-        _isLoading = false;
-      });
+      if (fileBytes == null || fileName.isEmpty) {
+        // Invalid file or missing data
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Invalid file selected")),
+        );
+        return;
+      }
+
+      // Proceed to upload the file
+      await _uploadFile(fileBytes, fileName);
     } catch (e) {
-      setState(() => _isLoading = false);
+      // Catch unexpected errors
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error loading resources: ${e.toString()}'),
+        SnackBar(content: Text("Error selecting file: $e")),
+      );
+    }
+  }
+
+  Future<void> _uploadFile(Uint8List fileBytes, String fileName) async {
+    try {
+      // Attempt to upload the file
+      await supabase.storage
+          .from('resources')
+          .uploadBinary(fileName, fileBytes);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("File uploaded successfully")),
+      );
+
+      // Refresh the resources list
+      _fetchResources();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to upload file: $e")),
+      );
+    }
+  }
+
+  Future<String?> _getUserRole() async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      print('No user is logged in');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User not logged in")),
+      );
+      return null;
+    }
+
+    try {
+      final response = await supabase
+          .from('users')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+      print('Fetched user role: ${response['role']}');
+      return response['role'] as String?;
+    } catch (e) {
+      print('Error fetching user role: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch user role: $e')),
+      );
+      return null;
+    }
+  }
+
+  Future<void> _openResource(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open the resource.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -82,123 +165,85 @@ class _ResourcesPageState extends State<ResourcesPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF161616),
       appBar: AppBar(
+        title: const Text('Resources'),
         backgroundColor: const Color(0xFF3F51B5),
-        title: const Text(
-          'Your Resources',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshResources,
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _resources.isEmpty
               ? const Center(
                   child: Text(
-                    'No resources available. Please refresh.',
-                    style: TextStyle(color: Colors.white70),
+                    'No resources available.',
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                 )
               : ListView.builder(
                   itemCount: _resources.length,
                   itemBuilder: (context, index) {
-                    return _buildResourceCard(_resources[index]);
+                    final resource = _resources[index];
+                    return GestureDetector(
+                      onTap: () => _openResource(resource['url']),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1E1E),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border:
+                              Border.all(color: Colors.blueAccent, width: 1),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                resource['name'],
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.open_in_browser,
+                                  color: Colors.blueAccent),
+                              onPressed: () => _openResource(resource['url']),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
                 ),
-    );
-  }
+      floatingActionButton: FutureBuilder<String?>(
+        future: _getUserRole(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox(); // Don't show button while loading
+          }
 
-  Widget _buildResourceCard(Resource resource) {
-    return Card(
-      color: const Color(0xFF1E1E1E),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              resource.name,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Type: ${resource.type.toUpperCase()}',
-              style: const TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => _openResource(resource.url, resource.type),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Open'),
-            ),
-          ],
-        ),
+          if (snapshot.data == 'admin') {
+            return FloatingActionButton(
+              onPressed: _selectFile,
+              backgroundColor: Colors.blueAccent,
+              child: const Icon(Icons.add, color: Colors.white),
+            );
+          }
+
+          return const SizedBox(); // Hide button for non-admin users
+        },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
-  }
-
-  Future<void> _refreshResources() async {
-    setState(() => _isLoading = true);
-    await _loadResources();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Resources refreshed successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _openResource(String url, String type) {
-    if (url.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Resource URL is not available.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Logic for opening the resource
-    if (type == 'link' || type == 'doc' || type == 'pdf') {
-      _downloadResource(url);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Unsupported resource type.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-    }
-  }
-
-  void _downloadResource(String fileUrl) async {
-    // Open resource URL using any supported method
-    if (await canLaunch(fileUrl)) {
-      await launch(fileUrl);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not open resource.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 }
