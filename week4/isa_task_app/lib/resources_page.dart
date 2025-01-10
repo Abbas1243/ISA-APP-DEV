@@ -152,6 +152,27 @@ class _ResourcesPageState extends State<ResourcesPage> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load resources: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _openResource(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Could not open the resource.'),
           backgroundColor: Colors.red,
@@ -166,6 +187,10 @@ class _ResourcesPageState extends State<ResourcesPage> {
       backgroundColor: const Color(0xFF161616),
       appBar: AppBar(
         title: const Text('Resources'),
+        title: const Text(
+          'Resources',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: const Color(0xFF3F51B5),
       ),
       body: _isLoading
@@ -242,6 +267,10 @@ class _ResourcesPageState extends State<ResourcesPage> {
 
           return const SizedBox(); // Hide button for non-admin users
         },
+      floatingActionButton: FloatingActionButton(
+        onPressed: _fetchResources,
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.refresh, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
