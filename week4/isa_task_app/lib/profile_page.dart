@@ -73,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ],
                     onChanged: (value) {
-                      setModalState(() {
+                      setState(() {
                         newRole =
                             value; // Update the new role within the modal state
                         print("Drop down newRole updated to: $newRole");
@@ -177,14 +177,17 @@ class _ProfilePageState extends State<ProfilePage> {
           .from('users')
           .update({'council_role': newRole}).eq('user_id', userId);
 
-      if (response.error == null) {
-        // Successfully updated the role
-        print("Council role updated successfully in the database.");
+// Log the response to check its structure
+      print("Response: $response");
+
+      if (response == null) {
+        // Successfully updated role
+        print("Council role updated successfully.");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Role Updated Successfully')),
         );
       } else {
-        // Log and show the error
+        // If there was an error, show the error message
         print("Error updating council role: ${response.error?.message}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${response.error?.message}')),
