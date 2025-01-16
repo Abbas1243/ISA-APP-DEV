@@ -38,7 +38,7 @@ class ResourcesPage extends StatelessWidget {
     {'name': 'Dart Language', 'url': 'https://dart.dev'},
   ];
 
-  ResourcesPage({Key? key}) : super(key: key);
+  ResourcesPage({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -65,7 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
               if (mounted) {
                 // Navigate based on user role
-                if (userData != null && userData['role'] == 'admin') {
+                if (userData['role'] == 'admin') {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
                       builder: (context) => AdminDashboard(),
